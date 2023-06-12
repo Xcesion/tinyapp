@@ -33,8 +33,13 @@ app.get("/set", (req, res) => {
  app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
  });
-
+// route for urls_index.ejs template
  app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
+});
+// route for urls_show.ejs template
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase.b2xVn2/* What goes here? */};
+  res.render("urls_show", templateVars);
 });
