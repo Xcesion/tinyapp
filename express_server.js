@@ -2,12 +2,16 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+function generateRandomString() {}
+
 app.set("view engine", "ejs");// this tells the Express app to use EJS as its templating engine
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -38,8 +42,18 @@ app.get("/set", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+// urls/new must genertate before "GET /urls/:id" route.
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 // route for urls_show.ejs template
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase.b2xVn2/* What goes here? */};
   res.render("urls_show", templateVars);
+});
+
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
