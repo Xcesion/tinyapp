@@ -23,7 +23,12 @@ Fill out the urls_show.ejs template to display the long URL and its shortened fo
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
       </div>
-      <div class="card-footer text-muted"></div>
+      <div class="card-footer text-muted">
+        <h4>Edit</h4>
+        <label>New URL</label>
+        <input method = "POST" id = "longURL" type = "text" Name = "New URL" value="<%= longURL %>" required>
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </div>
     </div>
     <!-- Bootstrap JS -->
     <script

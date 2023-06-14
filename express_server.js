@@ -46,14 +46,39 @@ app.get("/set", (req, res) => {
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
-
+// something . somthing 
 // route for urls_show.ejs template
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase.b2xVn2/* What goes here? */};
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls", (req, res) => {
+app.post('/urls/:id/delete', (req, res) => {
+  const id = req.params.id; 
+  delete id;
+  res.redirect('/urls');
+});
+
+app.post('/urls/:id/edit', (req, res) => {
+  const id = req.params.id;
+  const newLongURL = req.body.longURL;
+  urlDatabase[id] = newLongURL
+  res.redirect(urls)
+})
+app.post("/urls/", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
+  urlDatabase["111"] = req.body.longURL
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
+});
+
+
+app.get("/u/:id", (req, res) => {
+  // const longURL = ...
+  const id = req.params.id;
+  const longURL = urlDatabase[id];
+  if (longURL) {
+    res.redirect(longURL);
+  } else {
+    res.status(404).send("URL not found");
+  }
 });
