@@ -1,12 +1,12 @@
 const express = require("express");
-// const morgan = require("morgan");
+const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
 
 app.set("view engine", "ejs");// this tells the Express app to use EJS as its templating engine
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -19,7 +19,8 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password:"123",
+    // "purple-monkey-dinosaur"
   },
   user2RandomID: {
     id: "user2RandomID",
@@ -92,12 +93,17 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("urls_login");
+  const user = req.body.user;
+  res.render("urls_login", {user});
 });
 
 //ask mentor how to change the username to user
 app.post("/login", (req, res) => {
-  const username = req.body.username;
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(email);
+  console.log(password);
+  // const username = req.body.username;
   // Perform the necessary login logic here
   // if (!username){
   //   res.status(400).send('Please provide a username');
@@ -105,6 +111,7 @@ app.post("/login", (req, res) => {
   // // lookup the user based off their 
   // res.cookie("user_id", username);
   // res.redirect("/urls");
+  
   if (!email || !password) {
     res.status(400).send('Please provide an email and password');
   }
@@ -127,8 +134,9 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const username = "";
-  res.render("urls_register", {username});
+  // const username = "";
+  const user = "";
+  res.render("urls_register", {user});
 });
 
 app.post("/register", (req, res) => {
