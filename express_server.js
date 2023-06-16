@@ -1,6 +1,8 @@
+const {getUserByEmail} = require('./helpers')
 const express = require("express");
 const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
+const cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -9,11 +11,19 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");// this tells the Express app to use EJS as its templating engine
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["encryptKey1", "encryptKey2"],
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2,7)
 }
+
+
 
 // old structure
 // const urlDatabase = {
@@ -51,7 +61,7 @@ app.get("/", (req, res) => {
 
 //If the user is not logged in, redirect GET /urls/new to GET /login
 const requireLogin = (req, res, next) => {
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   if (!user_id || !users[user_id]) {
     res.redirect("/login");
   } else {
@@ -71,25 +81,25 @@ function urlsForUser(id) {
 
 app.get("/urls", (req, res) => {
   // const username = req.cookies.username  
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const user = users[user_id];
   // const urls = urlDatabase;
   // console.log("show me what is this", urls);
   if(!user){
-    res.status(401).send("Please log in or register first ")
+    return res.status(401).send("Please log in or register first ")
   }
   // shortURLIDs.map(id => urlDatabase[id].userID)
   console.log("user", user)
   const urls = urlsForUser(user_id);
   console.log("urls", urls)
   const templateVars = { urls, user};
-  return res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars);
 });
 
 // urls/new must genertate before "GET /urls/:id" route.
 app.get("/urls/new", requireLogin ,(req, res) => {
   // const username = req.cookies.username
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   console.log(user_id)
   const user = users[user_id];
   res.render("urls_new", {user});
@@ -99,7 +109,7 @@ app.get("/urls/new", requireLogin ,(req, res) => {
 // route for urls_show.ejs template
 app.get("/urls/:id", requireLogin,(req, res) => {
   // const username = req.cookies.username;
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const user = users[user_id];
   const id = req.params.id;
   const longURL = urlDatabase[id].longURL;
@@ -126,7 +136,7 @@ app.post('/urls/:id/edit', (req, res) => {
 app.post("/urls", requireLogin,(req, res) => {
   // console.log(req.body); // Log the POST request body to the console
   // urlDatabase["111"] = req.body.longURL
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   const id = generateRandomString()
   const user = users[user_id];
   if (!user){
@@ -152,29 +162,31 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const id = req.cookies.user_id
+  const id = req.session.user_id
   const user = req.body.user;
   if(user){
     return res.redirect('/urls');
   }
-  
-  return res.render("urls_login", {user : null});
+  res.render("urls_login", {user});
 });
 
 //ask mentor how to change the username to user
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  
   if (!email || !password) {
-    return res.status(400).send('Please provide an email and password');
+    res.status(400).send('Please provide an email and password');
   }
-  const user = Object.values(users).find(user => user.email === email);
+  const user = getUserByEmail(email, users);
   // console.log("print the value of user password", user.password);
   if (!user || !bcrypt.compareSync(password, user.password)){
-    return res.status(403).send(`Invalid email or password`);
+    res.status(403).send(`Invalid email or password`);
+    return;
   }
-  res.cookie("user_id", user.id);
-  return res.redirect("/urls");
+  // res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
@@ -198,11 +210,11 @@ app.post("/register", (req, res) => {
   // Perform registration logic here
   // ...
   if (email === "" || password === ""){
-    res.status(400).send(`Email and Password can not be empty`)
+    return res.status(400).send(`Email and Password can not be empty`)
   }
-  const exitedUser = Object.values(users).find(user => user.email === email);
+  const exitedUser = getUserByEmail(email,users);
   if (exitedUser){
-    res.status(400).send(`This email has already been registered`)
+    return res.status(400).send(`This email has already been registered`)
   }
   const user_id = generateRandomString();
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -213,8 +225,9 @@ app.post("/register", (req, res) => {
     password : hashedPassword
   };
 
-  users[user_id] = newUser
-  res.cookie("user_id", user_id)
+  users[user_id] = newUser //New user into Users database
+  // res.cookie("user_id", user_id);
+  req.session.user_id = user_id;// we can use user_id or newUser.id
   //register new users
   console.log(users)
   res.redirect("/urls"); // Redirect to a desired page after registration
