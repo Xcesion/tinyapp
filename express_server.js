@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -22,7 +23,7 @@ function generateRandomString() {
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
+    userID: "userRandomID",
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
@@ -34,13 +35,13 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password:"123",
-    // "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur",10),
+    
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk",10),
   },
 };
 
@@ -72,13 +73,15 @@ app.get("/urls", (req, res) => {
   // const username = req.cookies.username  
   const user_id = req.cookies.user_id;
   const user = users[user_id];
-  const urls = urlDatabase;
-  console.log("show me what is this", urls);
+  // const urls = urlDatabase;
+  // console.log("show me what is this", urls);
   if(!user){
-    res.status(401).send("Please ")
+    res.status(401).send("Please log in or register first ")
   }
   // shortURLIDs.map(id => urlDatabase[id].userID)
-  // const urls = shortURL.longURL
+  console.log("user", user)
+  const urls = urlsForUser(user_id);
+  console.log("urls", urls)
   const templateVars = { urls, user};
   return res.render("urls_index", templateVars);
 });
@@ -99,7 +102,7 @@ app.get("/urls/:id", requireLogin,(req, res) => {
   const user_id = req.cookies.user_id;
   const user = users[user_id];
   const id = req.params.id;
-  const longURL = urlDatabase[id];
+  const longURL = urlDatabase[id].longURL;
   const templateVars = { id, longURL, user};
   if(!longURL) {
     return res.status(404).send("URL not found");
@@ -127,7 +130,7 @@ app.post("/urls", requireLogin,(req, res) => {
   const id = generateRandomString()
   const user = users[user_id];
   if (!user){
-    return res.send("You are not allowed to shorten URLs. Please login first."); // Respond with 'Ok' (we will replace this)
+    return res.send("You are not allowed to shorten URLs. Please login first. \n Here is the login page :'http://localhost:8080/login' "); // Respond with 'Ok' (we will replace this)
   }
   urlDatabase[id] = {
     longURL : req.body.longURL,
@@ -149,45 +152,35 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
+  const id = req.cookies.user_id
   const user = req.body.user;
   if(user){
-    res.redirect('/urls');
+    return res.redirect('/urls');
   }
-  res.render("urls_login", {user});
+  
+  return res.render("urls_login", {user : null});
 });
 
 //ask mentor how to change the username to user
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  console.log(email);
-  console.log(password);
-  // const username = req.body.username;
-  // Perform the necessary login logic here
-  // if (!username){
-  //   res.status(400).send('Please provide a username');
-  // }
-  // // lookup the user based off their 
-  // res.cookie("user_id", username);
-  // res.redirect("/urls");
-  
   if (!email || !password) {
-    res.status(400).send('Please provide an email and password');
+    return res.status(400).send('Please provide an email and password');
   }
-  const user = Object.values(users).find(user => user.email === email || user.password === password);
-  console.log("print the value of user", user);
-  if (!user || user.password !== password){
-    res.status(403).send(`Invalid email or password`);
-    return;
+  const user = Object.values(users).find(user => user.email === email);
+  // console.log("print the value of user password", user.password);
+  if (!user || !bcrypt.compareSync(password, user.password)){
+    return res.status(403).send(`Invalid email or password`);
   }
   res.cookie("user_id", user.id);
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   console.log("test logout")
   res.clearCookie("user_id");
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.get("/register", (req, res) => {
@@ -211,9 +204,16 @@ app.post("/register", (req, res) => {
   if (exitedUser){
     res.status(400).send(`This email has already been registered`)
   }
-  const user_id = Math.random().toString(36).substring(2,6)
-  const newUsers = {user_id, email, password};
-  users[user_id] = newUsers
+  const user_id = generateRandomString();
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  console.log(hashedPassword);
+  const newUser = {
+    id : user_id, 
+    email: email,
+    password : hashedPassword
+  };
+
+  users[user_id] = newUser
   res.cookie("user_id", user_id)
   //register new users
   console.log(users)
