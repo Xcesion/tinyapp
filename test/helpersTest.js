@@ -26,6 +26,6 @@ describe('getUserByEmail', function() {
     console.log("show me what this is ", user);
     console.log("what's this ", testUsers.email);
     assert.strictEqual(user, undefined);
-    assert.isUndefined(testUsers.)
+    
   });
 });
