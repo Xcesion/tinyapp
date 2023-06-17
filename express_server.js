@@ -212,7 +212,7 @@ app.post("/register", (req, res) => {
   if (email === "" || password === ""){
     return res.status(400).send(`Email and Password can not be empty`)
   }
-  const exitedUser = getUserByEmail(email,users);
+  const exitedUser = getUserByEmail(email, users);
   if (exitedUser){
     return res.status(400).send(`This email has already been registered`)
   }
