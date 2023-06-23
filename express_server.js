@@ -1,14 +1,13 @@
 const {getUserByEmail} = require('./helpers')
 const express = require("express");
 const morgan = require("morgan");
-// const cookieParser = require("cookie-parser");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
-
-app.set("view engine", "ejs");// this tells the Express app to use EJS as its templating engine
+// this tells the Express app to use EJS as its templating engine
+app.set("view engine", "ejs");
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 // app.use(cookieParser());
@@ -23,13 +22,6 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2,7)
 }
 
-
-
-// old structure
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -56,7 +48,7 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.send("Hello! Welcome to Tiny App. Please enter /login page to login your account.");
 });
 
 //If the user is not logged in, redirect GET /urls/new to GET /login
@@ -112,21 +104,36 @@ app.get("/urls/:id", requireLogin,(req, res) => {
   const user_id = req.session.user_id;
   const user = users[user_id];
   const id = req.params.id;
+  const userURLs = urlsForUser(user_id);
+  
+  if (!user) {
+    res.status(401).send("You need to be logged in to update a URL.");
+    return;
+  }
+  if (urlDatabase[id] === undefined) {
+    res.status(404).send("URL does not exist");
+    return;
+  }
   const longURL = urlDatabase[id].longURL;
-  const templateVars = { id, longURL, user};
+  if (!Object.keys(userURLs).includes(id)) {
+    res.status(403).send("You do not have permission to access this URL");
+    return;
+  }
   if(!longURL) {
     return res.status(404).send("URL not found");
   }
+
+  const templateVars = { id, longURL, user};
   res.render("urls_show", templateVars);
 });
 
 app.post('/urls/:id/delete', (req, res) => {
   const id = req.params.id; 
-  delete id;
+  delete urlDatabase[id];
   res.redirect('/urls');
 });
 
-app.post('/urls/:id/edit', (req, res) => {
+app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const newLongURL = req.body.longURL;
   urlDatabase[id].longURL = newLongURL
