@@ -2,11 +2,6 @@
 
 TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs.
 
-## Final Product
-!["screenshot description"](https://github.com/Xcesion/tinyapp/blob/main/docs/user-login.png?raw=true)
-!["screenshot description"](https://github.com/Xcesion/tinyapp/blob/main/docs/url-edit.png?raw=true)
-!["screenshot description"](https://github.com/Xcesion/tinyapp/blob/main/docs/user-urls-page.png?raw=true)
-
 ## Dependencies
 
 - Node.js
@@ -20,3 +15,8 @@ TinyApp is a full stack web application built with Node and Express that allows 
 * Knowing REST 
 * Creating feature action on variables
 * Managing the server 
+
+## Final Product
+!["screenshot description"](https://github.com/Xcesion/tinyapp/blob/main/docs/user-login.png?raw=true)
+!["screenshot description"](https://github.com/Xcesion/tinyapp/blob/main/docs/url-edit.png?raw=true)
+!["screenshot description"](https://github.com/Xcesion/tinyapp/blob/main/docs/user-urls-page.png?raw=true)
