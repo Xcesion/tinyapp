@@ -100,13 +100,13 @@ app.get("/urls/new", requireLogin ,(req, res) => {
 
 
 // route for urls_show.ejs template
-app.get("/urls/:id", requireLogin,(req, res) => {
+app.get("/urls/:id", (req, res) => {
   // const username = req.cookies.username;
   const user_id = req.session.user_id;
   const user = users[user_id];
   const id = req.params.id;
   const userURLs = urlsForUser(user_id);
-  
+  console.log("what is this ", user);
   if (!user) {
     res.status(401).send("You need to be logged in to update a URL.");
     return;
@@ -119,9 +119,6 @@ app.get("/urls/:id", requireLogin,(req, res) => {
   if (!Object.keys(userURLs).includes(id)) {
     res.status(403).send("You do not have permission to access this URL");
     return;
-  }
-  if(!longURL) {
-    return res.status(404).send("URL not found");
   }
 
   const templateVars = { id, longURL, user};
