@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
+
 // this tells the Express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 app.use(morgan('dev'));
@@ -160,9 +161,9 @@ app.post("/urls", requireLogin,(req, res) => {
 app.get("/u/:id", (req, res) => {
   // const longURL = ...
   const id = req.params.id;
-  const longURL = urlDatabase[id].longURL;
-  if (longURL) {
-    res.redirect(longURL);
+  const url = urlDatabase[id];
+  if (url.longURL) {
+    res.redirect(url.longURL);
   } else {
     res.status(404).send("URL not found");
   }
@@ -177,7 +178,6 @@ app.get("/login", (req, res) => {
   res.render("urls_login", {user});
 });
 
-//ask mentor how to change the username to user
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -198,7 +198,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   console.log("test logout")
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -244,14 +244,6 @@ app.post("/register", (req, res) => {
 app.get("/signup", (req, res) => {
   res.render("register");
 });
-// app.get('/protected', (req, res) => {
-//   //read the incoming cookie(S)
-//   const username = req.cookies.username;
-//   if(username){
-//       res.status(401).send(`you must be logged in to see the page`)
-//   }
-//   console.log(req.cookies);
-// })
 
 app.listen(PORT, () =>{
   console.log( `app is listening on port ${PORT}` );
